@@ -25,7 +25,7 @@ class Post(models.Model):
     status = models.CharField(
         max_length=2,
         choices=Status.choices,  # Use Status.choices instead of Status
-        default=Status.DRAFT,
+        default=Status.DRAFT
     )
 
     # Custom Manager
@@ -40,7 +40,8 @@ class Post(models.Model):
     # Meta Options
     class Meta:
         ordering = ["-publish"]
-        indexes = [models.Index(fields=["-publish"])]
+        indexes = [models.Index(fields=["-publish"]),
+        ]
 
     # String Representation
     def __str__(self):
@@ -48,8 +49,13 @@ class Post(models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            "blog:post_detail",
-            args=[self.publish.year, self.publish.month, self.publish.day, self.slug],
+            'blog:post_detail',
+            args=[
+                self.publish.year,
+                self.publish.month,
+                self.publish.day,
+                self.slug,
+            ],
         )
 
 class Comment(models.Model):
