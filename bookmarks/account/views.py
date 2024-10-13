@@ -18,8 +18,6 @@ def dashboard(request):
         'account/dashboard.html',
         {'section': 'dashboard'}
     )
-
-
 def user_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
