@@ -42,10 +42,11 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     'taggit',
-    "blog.apps.BlogConfig"  
+    "blog.apps.BlogConfig",
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
