@@ -1,24 +1,36 @@
+# from django.shortcuts import get_object_or_404
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
-from rest_framework import generics
 from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from courses.models import Course, Subject
-from courses.api.pagination import StandardPagination
-from courses.api.serializers import CourseSerializer, SubjectSerializer
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-class SubjectListView(generics.ListAPIView):
+from courses.api.pagination import StandardPagination
+from courses.api.permissions import IsEnrolled
+from courses.api.serializers import (
+    CourseSerializer,
+    CourseWithContentsSerializer,
+    SubjectSerializer,
+)
+from courses.models import Course, Subject
+from students.models import Portfolio
+from .serializers import PortfolioSerializer 
+class PortfolioViewSet(viewsets.ModelViewSet): 
+    queryset = Portfolio.objects.all() 
+    serializer_class = PortfolioSerializer 
+    permission_classes = [IsAuthenticated] 
+    
+    def get_queryset(self): 
+        # Filter portfolios by the logged-in student 
+        return Portfolio.objects.filter(enrollment__student=self.request.user)
+
+
+class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Subject.objects.annotate(total_courses=Count('courses'))
     serializer_class = SubjectSerializer
     pagination_class = StandardPagination
 
-class SubjectDetailView(generics.RetrieveAPIView):
-    queryset = Subject.objects.annotate(total_courses=Count('courses'))
-    serializer_class = SubjectSerializer
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Course.objects.prefetch_related('modules')
@@ -29,23 +41,19 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         detail=True,
         methods=['post'],
         authentication_classes=[BasicAuthentication],
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
     )
     def enroll(self, request, *args, **kwargs):
         course = self.get_object()
         course.students.add(request.user)
         return Response({'enrolled': True})
-    
-class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Subject.objects.annotate(total_courses=Count('courses'))
-    serializer_class = SubjectSerializer
-    pagination_class = StandardPagination
 
-#class CourseEnrollView(APIView):
-    #authentication_classes = [BasicAuthentication]
-    #permission_classes = [IsAuthenticated]
-    
-    def post(self, request, pk, format=None):
-        course = get_object_or_404(Course, pk=pk)
-        course.students.add(request.user)
-        return Response({'enrolled': True})
+    @action(
+        detail=True,
+        methods=['get'],
+        serializer_class=CourseWithContentsSerializer,
+        authentication_classes=[BasicAuthentication],
+        permission_classes=[IsAuthenticated, IsEnrolled],
+    )
+    def contents(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
