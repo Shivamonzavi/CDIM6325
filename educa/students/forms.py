@@ -13,7 +13,7 @@ class PortfolioForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data.get('file')
         if file:
-            if file.size > 10 * 1024 * 1024:  # limit file size to 10MB
+            if file.size > 10 * 1024 * 1024:  
                 raise forms.ValidationError("File size must be under 10MB.")
             if not file.name.endswith(('.pdf', '.png', '.txt', '.mp4')):
                 raise forms.ValidationError("Unsupported file format.")
@@ -21,7 +21,7 @@ class PortfolioForm(forms.ModelForm):
 
 class CourseEnrollForm(forms.Form):
     course = forms.ModelChoiceField(
-        queryset=Course.objects.none(),  # initially empty
+        queryset=Course.objects.none(),  
         widget=forms.HiddenInput
     )
 
